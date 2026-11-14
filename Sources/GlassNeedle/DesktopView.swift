@@ -151,8 +151,8 @@ struct DesktopStageView: View {
                         .frame(width: min(geo.size.width * 0.75, 1000), height: min(geo.size.height * 0.40, 330))
                         .offset(y: geo.size.height * 0.13)
                 }
-                .allowsHitTesting(false)
             }
+            .allowsHitTesting(false)
             .frame(width: geo.size.width, height: geo.size.height)
         }
         .background(Color.clear)

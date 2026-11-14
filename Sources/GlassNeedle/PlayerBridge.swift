@@ -59,7 +59,7 @@ final class PlayerBridge {
 
     private static func parse(_ result: String?, source: TrackSnapshot.Source, durationDivisor: Double) -> TrackSnapshot? {
         guard let result, !result.isEmpty else { return nil }
-        let parts = result.components(separatedBy: Character(UnicodeScalar(31)!))
+        let parts = result.components(separatedBy: String(UnicodeScalar(31)!))
         guard parts.count >= 6, !parts[0].isEmpty else { return nil }
         let duration = (Double(parts[3]) ?? 0) / durationDivisor
         let position = Double(parts[4]) ?? 0

@@ -25,6 +25,9 @@ ln -s /Applications "$STAGE/Applications"
 mkdir -p dist
 hdiutil create -volname "GlassNeedle" -srcfolder "$STAGE" -ov -format UDZO -imagekey zlib-level=9 "${PWD}/dist/GlassNeedle-v0.1.0-macOS.dmg"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "${PWD}/dist/GlassNeedle-v0.1.0-macOS.zip"
-shasum -a 256 dist/GlassNeedle-v0.1.0-macOS.dmg > dist/SHA256SUMS.txt
-shasum -a 256 dist/GlassNeedle-v0.1.0-macOS.zip >> dist/SHA256SUMS.txt
+(
+  cd dist
+  shasum -a 256 GlassNeedle-v0.1.0-macOS.dmg > SHA256SUMS.txt
+  shasum -a 256 GlassNeedle-v0.1.0-macOS.zip >> SHA256SUMS.txt
+)
 echo "Created dist/GlassNeedle-v0.1.0-macOS.dmg (ad-hoc signed, NOT notarized)"

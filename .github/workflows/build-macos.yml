@@ -27,15 +27,15 @@ jobs:
         run: |
           test -x dist/GlassNeedle.app/Contents/MacOS/GlassNeedle
           codesign --verify --deep --strict --verbose=2 dist/GlassNeedle.app
-          hdiutil verify dist/GlassNeedle-v0.1.0-macOS.dmg
+          hdiutil verify dist/GlassNeedle-v0.3.0-macOS.dmg
           cd dist && shasum -a 256 -c SHA256SUMS.txt
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: GlassNeedle-macOS-preview
           path: |
-            dist/GlassNeedle-v0.1.0-macOS.dmg
-            dist/GlassNeedle-v0.1.0-macOS.zip
+            dist/GlassNeedle-v0.3.0-macOS.dmg
+            dist/GlassNeedle-v0.3.0-macOS.zip
             dist/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
@@ -49,11 +49,11 @@ jobs:
             TAG="$GITHUB_REF_NAME"
             PRERELEASE=""
           else
-            TAG="v0.1.0-preview"
+            TAG="v0.3.0-preview"
             PRERELEASE="--prerelease"
           fi
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" dist/GlassNeedle-v0.1.0-macOS.dmg dist/GlassNeedle-v0.1.0-macOS.zip dist/SHA256SUMS.txt --clobber
+            gh release upload "$TAG" dist/GlassNeedle-v0.3.0-macOS.dmg dist/GlassNeedle-v0.3.0-macOS.zip dist/SHA256SUMS.txt --clobber
           else
-            gh release create "$TAG" dist/GlassNeedle-v0.1.0-macOS.dmg dist/GlassNeedle-v0.1.0-macOS.zip dist/SHA256SUMS.txt --title "GlassNeedle $TAG" --target "$GITHUB_SHA" $PRERELEASE --notes "Experimental macOS native preview. Ad-hoc signed, not Apple-notarized; real-world QA pending. Does not unlock macOS or draw on its secure lock screen."
+            gh release create "$TAG" dist/GlassNeedle-v0.3.0-macOS.dmg dist/GlassNeedle-v0.3.0-macOS.zip dist/SHA256SUMS.txt --title "GlassNeedle $TAG" --target "$GITHUB_SHA" $PRERELEASE --notes "Experimental macOS native preview. Ad-hoc signed, not Apple-notarized; real-world QA pending. Does not unlock macOS or draw on its secure lock screen."
           fi

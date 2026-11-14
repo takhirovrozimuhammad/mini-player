@@ -23,11 +23,11 @@ trap 'rm -rf "$STAGE"' EXIT
 ditto "$APP" "$STAGE/GlassNeedle.app"
 ln -s /Applications "$STAGE/Applications"
 mkdir -p dist
-hdiutil create -volname "GlassNeedle" -srcfolder "$STAGE" -ov -format UDZO -imagekey zlib-level=9 "${PWD}/dist/GlassNeedle-v0.1.0-macOS.dmg"
-ditto -c -k --sequesterRsrc --keepParent "$APP" "${PWD}/dist/GlassNeedle-v0.1.0-macOS.zip"
+hdiutil create -volname "GlassNeedle" -srcfolder "$STAGE" -ov -format UDZO -imagekey zlib-level=9 "${PWD}/dist/GlassNeedle-v0.3.0-macOS.dmg"
+ditto -c -k --sequesterRsrc --keepParent "$APP" "${PWD}/dist/GlassNeedle-v0.3.0-macOS.zip"
 (
   cd dist
-  shasum -a 256 GlassNeedle-v0.1.0-macOS.dmg > SHA256SUMS.txt
-  shasum -a 256 GlassNeedle-v0.1.0-macOS.zip >> SHA256SUMS.txt
+  shasum -a 256 GlassNeedle-v0.3.0-macOS.dmg > SHA256SUMS.txt
+  shasum -a 256 GlassNeedle-v0.3.0-macOS.zip >> SHA256SUMS.txt
 )
-echo "Created dist/GlassNeedle-v0.1.0-macOS.dmg (ad-hoc signed, NOT notarized)"
+echo "Created dist/GlassNeedle-v0.3.0-macOS.dmg (ad-hoc signed, NOT notarized)"

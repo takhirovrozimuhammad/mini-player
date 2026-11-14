@@ -48,7 +48,7 @@ struct IslandView: View {
                 .frame(width: 32, height: 15)
         }
         .padding(.horizontal, 13)
-        .frame(width: 208, height: 35)
+        .frame(width: CGFloat(settings.floatingWidth) - 2, height: 40)
     }
 
     private var expandedPlayer: some View {
@@ -101,7 +101,7 @@ struct IslandView: View {
         }
         .padding(17)
         .frame(width: 438)
-        .background(AccentAmbient(accent: accent, brightness: 0.36).clipShape(RoundedRectangle(cornerRadius: 27)))
+        .background(Color.clear)
     }
 }
 

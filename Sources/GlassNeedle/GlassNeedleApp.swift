@@ -43,13 +43,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
-        let heading = NSMenuItem(title: "GlassNeedle  ·  0.1 Preview", action: nil, keyEquivalent: "")
+        let heading = NSMenuItem(title: "GlassNeedle  ·  0.3 Preview", action: nil, keyEquivalent: "")
         heading.isEnabled = false
         menu.addItem(heading)
         menu.addItem(.separator())
         add("Open Studio / Settings", selector: #selector(openSettings))
         add(settings.islandEnabled ? "✓  Glass Island" : "    Glass Island", selector: #selector(toggleIsland))
         add(settings.desktopEnabled ? "✓  Desktop player" : "    Desktop player", selector: #selector(toggleDesktop))
+        add(settings.alwaysOnTop ? "✓  Pin desktop player" : "    Pin desktop player", selector: #selector(toggleFloat))
+        menu.addItem(.separator())
+        add(settings.islandMode == .notch ? "✓  Hardware notch" : "    Hardware notch", selector: #selector(selectNotch))
+        add(settings.islandMode == .floating ? "✓  Floating island" : "    Floating island", selector: #selector(selectFloat))
+        add(settings.islandMode == .reveal ? "✓  1s hover reveal" : "    1s hover reveal", selector: #selector(selectReveal))
         add(settings.stageEnabled ? "✓  Cinematic desktop stage" : "    Cinematic desktop stage", selector: #selector(toggleStage))
         add(settings.demoMode ? "✓  Demo preview" : "    Demo preview", selector: #selector(toggleDemo))
         menu.addItem(.separator())
@@ -68,6 +73,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func openSettings() { overlays.showSettings() }
     @objc private func toggleIsland() { settings.islandEnabled.toggle() }
     @objc private func toggleDesktop() { settings.desktopEnabled.toggle() }
+    @objc private func toggleFloat() { settings.alwaysOnTop.toggle() }
+    @objc private func selectNotch() { settings.islandMode = .notch }
+    @objc private func selectFloat() { settings.islandMode = .floating }
+    @objc private func selectReveal() { settings.islandMode = .reveal }
     @objc private func toggleStage() { settings.stageEnabled.toggle() }
     @objc private func toggleDemo() { settings.demoMode.toggle() }
     @objc private func scan() { overlays.showScanPreview() }

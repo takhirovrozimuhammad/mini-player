@@ -1,10 +1,23 @@
 import Foundation
 import Combine
 
+enum IslandMode: String, CaseIterable, Identifiable {
+    case notch = "Hardware notch"
+    case floating = "Floating island"
+    case reveal = "1s hover reveal"
+    var id: String { rawValue }
+}
+
 @MainActor
 final class GlassSettings: ObservableObject {
     private let defaults = UserDefaults.standard
     @Published var islandEnabled: Bool { didSet { persist() } }
+    @Published var islandMode: IslandMode { didSet { persist() } }
+    @Published var notchSideWidth: Double { didSet { persist() } }
+    @Published var floatingWidth: Double { didSet { persist() } }
+    @Published var islandTopGap: Double { didSet { persist() } }
+    @Published var islandOffsetX: Double { didSet { persist() } }
+    @Published var hoverWait: Double { didSet { persist() } }
     @Published var desktopEnabled: Bool { didSet { persist() } }
     @Published var stageEnabled: Bool { didSet { persist() } }
     @Published var lyricsEnabled: Bool { didSet { persist() } }
@@ -28,12 +41,18 @@ final class GlassSettings: ObservableObject {
             UserDefaults.standard.object(forKey: key) as? Bool ?? fallback
         }
         islandEnabled = bool("islandEnabled", true)
+        islandMode = IslandMode(rawValue: UserDefaults.standard.string(forKey: "islandMode") ?? "") ?? .notch
+        notchSideWidth = UserDefaults.standard.object(forKey: "notchSideWidth") as? Double ?? 64
+        floatingWidth = UserDefaults.standard.object(forKey: "floatingWidth") as? Double ?? 244
+        islandTopGap = UserDefaults.standard.object(forKey: "islandTopGap") as? Double ?? 15
+        islandOffsetX = UserDefaults.standard.object(forKey: "islandOffsetX") as? Double ?? 0
+        hoverWait = UserDefaults.standard.object(forKey: "hoverWait") as? Double ?? 1.0
         desktopEnabled = bool("desktopEnabled", true)
         stageEnabled = bool("stageEnabled", false)
         lyricsEnabled = bool("lyricsEnabled", true)
         clockEnabled = bool("clockEnabled", true)
         edgeGlow = bool("edgeGlow", true)
-        alwaysOnTop = bool("alwaysOnTop", false)
+        alwaysOnTop = bool("alwaysOnTop", true)
         reducedMotion = bool("reducedMotion", false)
         launchAtLogin = bool("launchAtLogin", false)
         useVideoWallpaper = bool("useVideoWallpaper", false)
@@ -43,12 +62,18 @@ final class GlassSettings: ObservableObject {
         accent = AccentStyle(rawValue: UserDefaults.standard.string(forKey: "accent") ?? "") ?? .amethyst
         desktopStyle = DesktopStyle(rawValue: UserDefaults.standard.string(forKey: "desktopStyle") ?? "") ?? .vinyl
         stageStyle = StageStyle(rawValue: UserDefaults.standard.string(forKey: "stageStyle") ?? "") ?? .cinematic
-        widgetX = UserDefaults.standard.object(forKey: "widgetX") as? Double ?? 0.72
+        widgetX = UserDefaults.standard.object(forKey: "widgetX") as? Double ?? 0.38
         widgetY = UserDefaults.standard.object(forKey: "widgetY") as? Double ?? 0.24
     }
 
     private func persist() {
         defaults.set(islandEnabled, forKey: "islandEnabled")
+        defaults.set(islandMode.rawValue, forKey: "islandMode")
+        defaults.set(notchSideWidth, forKey: "notchSideWidth")
+        defaults.set(floatingWidth, forKey: "floatingWidth")
+        defaults.set(islandTopGap, forKey: "islandTopGap")
+        defaults.set(islandOffsetX, forKey: "islandOffsetX")
+        defaults.set(hoverWait, forKey: "hoverWait")
         defaults.set(desktopEnabled, forKey: "desktopEnabled")
         defaults.set(stageEnabled, forKey: "stageEnabled")
         defaults.set(lyricsEnabled, forKey: "lyricsEnabled")

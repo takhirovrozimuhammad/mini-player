@@ -14,14 +14,12 @@ struct GlassSurface: ViewModifier {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         if #available(macOS 26.0, *) {
             content
-                .background { shape.fill(.black.opacity(0.14 * intensity)) }
-                .glassEffect(.regular.tint(.white.opacity(0.045 * intensity)), in: shape)
-                .overlay(shape.strokeBorder(.white.opacity(0.25 * intensity), lineWidth: 0.8))
+                .glassEffect(.regular, in: shape)
+                .overlay(shape.strokeBorder(.white.opacity(0.32 * intensity), lineWidth: 0.9))
                 .shadow(color: .black.opacity(0.28), radius: 22, y: 12)
         } else {
             content
-                .background(.ultraThinMaterial, in: shape)
-                .background(shape.fill(.black.opacity(0.34 * intensity)))
+                .background(.regularMaterial, in: shape)
                 .overlay(shape.strokeBorder(.white.opacity(0.25 * intensity), lineWidth: 0.8))
                 .shadow(color: .black.opacity(0.28), radius: 22, y: 12)
         }

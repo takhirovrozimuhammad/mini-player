@@ -9,7 +9,6 @@ struct DesktopWidgetView: View {
 
     var body: some View {
         ZStack {
-            AccentAmbient(accent: accent, brightness: 0.7)
             HStack(spacing: 27) {
                 if settings.desktopStyle == .vinyl {
                     ZStack(alignment: .topTrailing) {

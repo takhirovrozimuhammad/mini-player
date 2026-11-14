@@ -15,8 +15,6 @@ struct SettingsView: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.045, green: 0.045, blue: 0.08)
-            AccentAmbient(accent: accentColor, brightness: 0.6)
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     HStack {
@@ -29,7 +27,7 @@ struct SettingsView: View {
                                 .tracking(2).foregroundStyle(.white.opacity(0.47))
                         }
                         Spacer()
-                        Text("PREVIEW 0.1")
+                        Text("PREVIEW 0.3")
                             .font(.system(size: 10, weight: .bold, design: .rounded))
                             .foregroundStyle(.white.opacity(0.65))
                             .padding(9).glassSurface(radius: 12)
@@ -38,6 +36,31 @@ struct SettingsView: View {
 
                     section("Surfaces", icon: "square.3.layers.3d") {
                         toggle("Glass Dynamic Island", sub: "Notch hover player, music controls & waveform", value: $settings.islandEnabled)
+                        HStack {
+                            Text("Island mode")
+                            Spacer()
+                            Picker("Mode", selection: $settings.islandMode) {
+                                ForEach(IslandMode.allCases) { mode in
+                                    Text(mode.rawValue).tag(mode)
+                                }
+                            }
+                            .labelsHidden()
+                            .frame(width: 210)
+                        }
+                        if settings.islandMode == .notch {
+                            calibration("Side wings", value: $settings.notchSideWidth, range: 30...115, unit: "pt")
+                            Text("Actual camera cutout is measured automatically with NotchKit. Side wings adjust the space left and right of your camera.")
+                                .font(.system(size: 11)).foregroundStyle(.secondary)
+                        } else {
+                            calibration("Island width", value: $settings.floatingWidth, range: 185...340, unit: "pt")
+                            calibration("Top gap", value: $settings.islandTopGap, range: 4...80, unit: "pt")
+                            calibration("Horizontal offset", value: $settings.islandOffsetX, range: -130...130, unit: "pt")
+                        }
+                        if settings.islandMode == .reveal {
+                            calibration("Hover to appear", value: $settings.hoverWait, range: 0.5...2.5, unit: "s")
+                            Text("Move your pointer to the very top centre and hold for the selected delay.")
+                                .font(.system(size: 11)).foregroundStyle(.secondary)
+                        }
                         toggle("Desktop music widget", sub: "Interactive card directly above the wallpaper", value: $settings.desktopEnabled)
                         toggle("Cinematic desktop stage", sub: "Big clock, centered lyrics and wallpaper glow", value: $settings.stageEnabled)
                         toggle("Show synchronized lyrics", sub: "LRCLIB fetches lyrics for supported tracks", value: $settings.lyricsEnabled)
@@ -140,6 +163,8 @@ struct SettingsView: View {
             .scrollIndicators(.hidden)
         }
         .foregroundStyle(.white)
+        .background(.regularMaterial)
+        .preferredColorScheme(.dark)
         .frame(minWidth: 630, minHeight: 510)
     }
 
@@ -153,6 +178,16 @@ struct SettingsView: View {
         }
         .padding(21).frame(maxWidth: .infinity, alignment: .leading)
         .glassSurface(radius: 25, intensity: settings.glassOpacity)
+    }
+
+    private func calibration(_ title: String, value: Binding<Double>, range: ClosedRange<Double>, unit: String) -> some View {
+        HStack(spacing: 10) {
+            Text(title).frame(width: 142, alignment: .leading)
+            Slider(value: value, in: range).tint(accentColor)
+            Text("\(Int(value.wrappedValue)) \(unit)")
+                .monospacedDigit().frame(width: 65, alignment: .trailing)
+        }
+        .font(.system(size: 12))
     }
 
     private func toggle(_ title: String, sub: String, value: Binding<Bool>) -> some View {

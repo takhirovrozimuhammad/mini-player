@@ -14,9 +14,9 @@ APP="$PWD/dist/GlassNeedle.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp .build/release/GlassNeedle "$APP/Contents/MacOS/GlassNeedle"
 cp Info.plist "$APP/Contents/Info.plist"
-if [[ -d Resources/AppIcon.iconset ]] && command -v iconutil >/dev/null 2>&1; then
-  iconutil -c icns Resources/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
-fi
+swift scripts/generate-icon.swift
+iconutil -c icns Resources/AppIcon.iconset -o "$APP/Contents/Resources/AppIcon.icns"
+test -s "$APP/Contents/Resources/AppIcon.icns"
 chmod +x "$APP/Contents/MacOS/GlassNeedle"
 codesign --force --sign - "$APP"
 echo "App ready: $APP"

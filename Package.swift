@@ -7,7 +7,7 @@ let package = Package(
     products: [.executable(name: "GlassNeedle", targets: ["GlassNeedle"])],
     dependencies: [
         // Existing, tested MIT open-source macOS notch geometry + pointer handling.
-        .package(url: "https://github.com/duongductrong/NotchKit.git", branch: "main"),
+        .package(url: "https://github.com/duongductrong/NotchKit.git", branch: "master"),
         // Existing, tested MIT open-source screen notch/safe area metrics.
         .package(url: "https://github.com/bring-shrubbery/dynamic-landing.git", branch: "main"),
     ],

@@ -3,6 +3,8 @@ import SwiftUI
 import Combine
 import CoreGraphics
 import QuartzCore
+import NotchKit
+import DynamicLanding
 
 @MainActor
 final class OverlayCoordinator: NSObject, NSWindowDelegate {
@@ -14,6 +16,12 @@ final class OverlayCoordinator: NSObject, NSWindowDelegate {
     private var scanPanel: NSPanel?
     private var settingsWindow: NSWindow?
     private var expanded = false
+    private var nativeNotch: NotchPresenter?
+    private var currentIslandMode: IslandMode?
+    private var revealTimer: Timer?
+    private var revealStart: Date?
+    private var revealLastSeen = Date.distantPast
+    private var isRevealed = false
     private var subscription: AnyCancellable?
 
     init(settings: GlassSettings, media: MediaStore) {
@@ -94,13 +102,88 @@ final class OverlayCoordinator: NSObject, NSWindowDelegate {
         islandPanel = p
     }
 
+
+    /// NotchKit: actual NSScreen cutout measurement, native hit testing and morphing.
+    private func ensureNativeNotch() {
+        if let notch = nativeNotch {
+            var config = notch.configuration
+            config.collapsedWidth = .wrapCutout(reserve: CGFloat(settings.notchSideWidth))
+            notch.configuration = config
+            notch.refreshPlacement()
+            return
+        }
+        let config = NotchConfiguration(
+            expandedSize: CGSize(width: 515, height: 240),
+            collapsedWidth: .wrapCutout(reserve: CGFloat(settings.notchSideWidth)),
+            hoverOpenDelay: 0.18
+        )
+        let notch = NotchPresenter(configuration: config, style: .standard)
+        nativeNotch = notch
+        notch.install(
+            collapsed: { NativeNotchCollapsed(media: self.media, presenter: notch) },
+            expanded: { NativeNotchExpanded(media: self.media, settings: self.settings,
+                                           showSettings: { [weak self] in self?.showSettings() }) }
+        )
+    }
+
+    /// DynamicLanding: built-in notch metrics instead of hardcoded 210x37.
+    private func detachedFrame(screen: NSScreen, expanded: Bool) -> NSRect {
+        let metrics = ScreenMetrics(screen: screen)
+        let width: CGFloat = expanded ? 446 : CGFloat(settings.floatingWidth)
+        let height: CGFloat = expanded ? 239 : 42
+        let cameraHeight = metrics.notchSize?.height ?? metrics.menuBarHeight
+        return NSRect(x: screen.frame.midX + CGFloat(settings.islandOffsetX) - width / 2,
+                      y: screen.frame.maxY - cameraHeight - CGFloat(settings.islandTopGap) - height,
+                      width: width, height: height)
+    }
+
+    private func startRevealTicker() {
+        guard revealTimer == nil else { return }
+        isRevealed = false
+        revealStart = nil
+        revealTimer = Timer.scheduledTimer(timeInterval: 0.1, target: self,
+                                           selector: #selector(sampleReveal),
+                                           userInfo: nil, repeats: true)
+    }
+
+    private func stopRevealTicker() {
+        revealTimer?.invalidate()
+        revealTimer = nil
+        revealStart = nil
+        isRevealed = false
+    }
+
+    /// Mode 3: only appears after a sustained hover at the top center.
+    @objc private func sampleReveal() {
+        guard settings.islandEnabled, settings.islandMode == .reveal,
+              let target = screen() else { return }
+        let pointer = NSEvent.mouseLocation
+        let atTop = abs(pointer.x - target.frame.midX) <= 160 &&
+                    pointer.y >= target.frame.maxY - 14 && pointer.y <= target.frame.maxY + 1
+        let inPlayer = islandPanel?.frame.insetBy(dx: -12, dy: -14).contains(pointer) ?? false
+        if atTop {
+            revealLastSeen = Date()
+            if revealStart == nil { revealStart = Date() }
+            if let start = revealStart, Date().timeIntervalSince(start) >= settings.hoverWait,
+               !isRevealed {
+                isRevealed = true
+                islandPanel?.setFrame(detachedFrame(screen: target, expanded: expanded), display: true)
+                islandPanel?.orderFrontRegardless()
+            }
+        } else {
+            revealStart = nil
+            if inPlayer { revealLastSeen = Date() }
+            if isRevealed && Date().timeIntervalSince(revealLastSeen) > 1.0 {
+                isRevealed = false
+                islandPanel?.orderOut(nil)
+            }
+        }
+    }
+
     private func expandIsland(_ yes: Bool) {
         guard let p = islandPanel, let target = screen() else { return }
         expanded = yes
-        let size = yes ? NSSize(width: 442, height: 239) : NSSize(width: 210, height: 37)
-        let targetFrame = NSRect(x: target.frame.midX-size.width/2,
-                                 y: target.frame.maxY-size.height,
-                                 width: size.width, height: size.height)
+        let targetFrame = detachedFrame(screen: target, expanded: yes)
         NSAnimationContext.runAnimationGroup { context in
             context.duration = settings.reducedMotion ? 0 : 0.28
             context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -117,14 +200,39 @@ final class OverlayCoordinator: NSObject, NSWindowDelegate {
         widgetPanel?.level = settings.alwaysOnTop ? .floating : desktopLevel
         if settings.desktopEnabled { widgetPanel?.orderFrontRegardless() } else { widgetPanel?.orderOut(nil) }
 
-        if settings.islandEnabled {
-            islandPanel?.orderFrontRegardless()
-            let size = expanded ? NSSize(width: 442, height: 239) : NSSize(width: 210, height: 37)
-            islandPanel?.setFrame(NSRect(x: target.frame.midX-size.width/2,
-                                         y: target.frame.maxY-size.height,
-                                         width: size.width, height: size.height), display: true)
-        } else {
+        let mode = settings.islandMode
+        if currentIslandMode != mode {
+            nativeNotch?.uninstall()
+            nativeNotch = nil
+            stopRevealTicker()
+            expanded = false
             islandPanel?.orderOut(nil)
+            islandPanel = nil
+            if mode != .notch { createIsland() }
+            currentIslandMode = mode
+        }
+        if !settings.islandEnabled {
+            nativeNotch?.uninstall()
+            nativeNotch = nil
+            islandPanel?.orderOut(nil)
+            stopRevealTicker()
+        } else if mode == .notch {
+            islandPanel?.orderOut(nil)
+            stopRevealTicker()
+            ensureNativeNotch()
+        } else {
+            nativeNotch?.uninstall()
+            nativeNotch = nil
+            if islandPanel == nil { createIsland() }
+            islandPanel?.setFrame(detachedFrame(screen: target, expanded: expanded), display: true)
+            if mode == .floating {
+                stopRevealTicker()
+                islandPanel?.orderFrontRegardless()
+            } else {
+                startRevealTicker()
+                if isRevealed { islandPanel?.orderFrontRegardless() }
+                else { islandPanel?.orderOut(nil) }
+            }
         }
     }
 
@@ -156,6 +264,10 @@ final class OverlayCoordinator: NSObject, NSWindowDelegate {
                               styleMask: [.titled, .closable, .miniaturizable, .resizable],
                               backing: .buffered, defer: false)
         window.title = "GlassNeedle • Studio"
+        window.titlebarAppearsTransparent = true
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.appearance = NSAppearance(named: .darkAqua)
         window.minSize = NSSize(width: 630, height: 510)
         window.contentView = NSHostingView(rootView: SettingsView(
             settings: settings, media: media, onScan: { [weak self] in self?.showScanPreview() }))

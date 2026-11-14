@@ -1,6 +1,13 @@
 # GlassNeedle — Mac uchun native music experience
 
-**Holati: source-code preview v0.1.0 — Xcode/macOS kompilatsiya hali tasdiqlanmagan.**
+**v0.3 preview:** integrates three MIT-licensed projects, with three distinct island modes. Test the actual GitHub Actions build before installing.
+
+### Island modes
+1. Hardware notch — NotchKit measures actual display cutout; Side wings are adjustable.
+2. Floating island — uses DynamicLanding screen metrics; adjustable width, gap and horizontal position.
+3. Hover reveal — the panel appears when the pointer remains at the top centre for 1 second; delay is adjustable.
+
+Actual Mac Face ID unlock and drawing inside macOS's secure Lock Screen are not supported. See THIRD_PARTY_NOTICES.md for integrated licenses.
 
 GlassNeedle — yuborilgan Needle/Boring Notch skrinshotlari va ikkita videodagi g'oyalardan ilhomlangan, **original** SwiftUI + AppKit dasturi. Bu Needle'ning rasmiy kodi yoki Needle bilan bog'liq mahsulot emas. Githubdagi GPL-3.0 kodlari bu loyihaga ko'chirilmagan.
 

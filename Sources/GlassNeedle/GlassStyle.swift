@@ -82,6 +82,7 @@ struct AlbumCover: View {
 }
 
 struct VinylRecord: View {
+    @State private var vinylMotion = DeckMotion()
     @ObservedObject var media: MediaStore
     @ObservedObject var settings: GlassSettings
     var diameter: CGFloat = 180
@@ -90,7 +91,8 @@ struct VinylRecord: View {
     }
     var body: some View {
         TimelineView(.periodic(from: .now,
-                               by: settings.reducedMotion || media.track?.playing != true ? 1 : 1.0 / 24)) { _ in
+                               by: settings.reducedMotion || media.track?.playing != true ? 1 : 1.0 / 24)) { timestamp in
+            let angle = vinylMotion.spinStep(timestamp.date, playing: !settings.reducedMotion && media.track?.playing == true)
             ZStack {
                 Circle().fill(
                     RadialGradient(colors: [.black,.init(white:0.15),.black,.init(white:0.09),.black],
@@ -106,7 +108,7 @@ struct VinylRecord: View {
             }
             .frame(width: diameter, height: diameter)
             .clipShape(Circle())
-            .rotationEffect(.degrees(settings.reducedMotion ? 0 : media.progress * 200))
+            .rotationEffect(.radians(angle))
             .shadow(color: .black.opacity(0.6), radius: 14, y: 8)
             .overlay(Circle().stroke(.white.opacity(0.09), lineWidth: 1))
         }
